@@ -23,15 +23,34 @@ def concat(dfs):
   return ret
 
 
-def search(df, query, by='col=val', dtype=str):
-  indices = []
-  if type(query) is list:
+def search(df, query, by='value'):
+  ret = df.loc[[False], :]
+  if len(df) <= 0:
+    pass
+
+  elif type(query) is list:
+    cond = [False for _ in range(len(df))]
     for q in query:
-      indices += search(df, q, by, dtype)
+      # indices += search(df, q, by, dtype)
+      if by == 'value':
+        c, v = q.split('=')
+        c = c.strip()
+        v = v.strip()
+        dtype = type(df[c].iloc[0])
+        cond = (df[c] == dtype(v)) | cond
+    ret = df.loc[cond, :]
+
   elif type(query) is str:
-    if by == 'col=val':
+    if by == 'value':
       c, v = query.split('=')
-      a = np.array(df[c] == dtype(v))
-      indices = list(np.where(a == True)[0])
+      c = c.strip()
+      v = v.strip()
+      dtype = type(df[c].iloc[0])
+      ret = df.loc[df[c] == dtype(v), :]
     # elif by == ?
-  return indices
+  elif type(query) is int:
+    pass
+  else:
+    pass
+
+  return ret
