@@ -74,3 +74,13 @@ def get_primes(n):
         if is_prime:
             primes.append(i)
     return primes
+
+
+def get_rect(coords):
+    min_x, max_y, max_x, min_y = (float('inf'), float('-inf'), float('-inf'), float('inf'))
+    for x, y in coords:
+        if x < min_x: min_x = x
+        if x > max_x: max_x = x
+        if y < min_y: min_y = y
+        if y > max_y: max_y = y
+    return (min_x, max_y), (max_x, min_y)
