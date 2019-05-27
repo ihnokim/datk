@@ -84,3 +84,34 @@ def get_rect(coords):
         if y < min_y: min_y = y
         if y > max_y: max_y = y
     return (min_x, max_y), (max_x, min_y)
+
+
+class ChainingDict():
+    def __init__(self, dict={}):
+        self.data = dict
+
+    def add(self, key, value):
+        if key in self.data:
+            self.data[key].append(value)
+        else:
+            self.data[key] = [value]
+
+    def dict(self):
+        return self.data
+
+
+class CoordsDict():
+    def __init__(self, dict={}):
+        self.data = {}
+
+    def add(self, coords, value):
+        self.data[coords] = value
+
+    def coords(self):
+        return np.array([[coord[0], coord[1]] for coord in self.data])
+
+    def values(self):
+        return np.array([self.data[coord] for coord in self.data])
+
+    def dict(self):
+        return self.data
