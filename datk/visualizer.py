@@ -22,3 +22,12 @@ def legend(subplot, labels, colors):
     for color in colors:
         lines.append(Line2D([0], [0], linewidth=7.0, linestyle='-', color=color))
     subplot.legend(lines, labels, loc='best', borderpad=0.7)
+
+
+def put_nsigma(subplot, x, mu, sigma, n=3, color='r', alpha=0.1, label=''):
+    mu = np.array(mu)
+    sigma = np.array(sigma)
+
+    subplot.plot(x, mu, color, label=label)
+    for i in range(1, n + 1):
+        subplot.fill_between(x, mu - sigma * i, mu + sigma * i, color=color, alpha=alpha)
