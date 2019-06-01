@@ -99,15 +99,19 @@ def extract_values(value_points):
 class Wafer(object):
 
     '''
-    wafer_info
-    center_shot = 1
-    size = (rx, ry) ... how many shots in radius?
-    name = str
-
+    shot_coords\n
+    key: int\n
+    value: (x, y)\n
+    \n
+    wafer_info\n
+    center_shot = 1\n
+    size = (rx, ry) ... how many shots in radius?\n
+    name = str\n
+    \n
     chip_info
-    size = (w, h)
-    num = (y, x) ... in one shot
-    shot_pos = (y, x) ... in one shot
+    size = (w, h)\n
+    num = (y, x) ... in one shot\n
+    shot_pos = (y, x) ... in one shot\n
     '''
 
     def __init__(self, shot_coords, wafer_info, chip_info, padding=1, values={}):
@@ -149,8 +153,8 @@ class Wafer(object):
 
     def add_value(self, shot, value):
         start_pos = self.pos[shot]
-        r = start_pos[0] + self.chip_info['shot_pos'][0] * self.chip_info['size'][1] # y axis
-        c = start_pos[1] + self.chip_info['shot_pos'][1] * self.chip_info['size'][0] # x axis
+        r = start_pos[0] + self.chip_info['shot_pos'][0] * self.chip_info['size'][1]  # y axis
+        c = start_pos[1] + self.chip_info['shot_pos'][1] * self.chip_info['size'][0]  # x axis
 
         for r_i in range(r, r + self.chip_info['size'][1]):
             for c_i in range(c, c + self.chip_info['size'][0]):
@@ -184,44 +188,44 @@ class Wafer(object):
         grid_x, grid_y = np.mgrid[0: 1: self.img_w * 1j, 0: 1: self.img_h * 1j]
         self.img = griddata(points, values, (grid_x, grid_y), method='cubic')
 
+    @staticmethod
+    def example():
+        shot_coords = {}
+        for shot in range(1, 6):
+            shot_coords[shot] = (0, shot - 1)
+        for shot in range(6, 14):
+            shot_coords[shot] = (1, 9 - shot)
+        for shot in range(14, 22):
+            shot_coords[shot] = (2, shot - 18)
+        for shot in range(22, 28):
+            shot_coords[shot] = (3, 24 - shot)
+        for shot in range(28, 30):
+            shot_coords[shot] = (4, shot - 29)
+        for shot in range(30, 35):
+            shot_coords[shot] = (0, 29 - shot)
+        for shot in range(35, 45):
+            shot_coords[shot] = (-1, shot - 40)
+        for shot in range(45, 53):
+            shot_coords[shot] = (-2, 48 - shot)
+        for shot in range(53, 61):
+            shot_coords[shot] = (-3, shot - 57)
+        for shot in range(61, 67):
+            shot_coords[shot] = (-4, 63 - shot)
+        for shot in range(67, 69):
+            shot_coords[shot] = (-5, shot - 68)
 
-def get_sample_wafer():
-    shot_coords = {}
-    for shot in range(1, 6):
-        shot_coords[shot] = (0, shot - 1)
-    for shot in range(6, 14):
-        shot_coords[shot] = (1, 9 - shot)
-    for shot in range(14, 22):
-        shot_coords[shot] = (2, shot - 18)
-    for shot in range(22, 28):
-        shot_coords[shot] = (3, 24 - shot)
-    for shot in range(28, 30):
-        shot_coords[shot] = (4, shot - 29)
-    for shot in range(30, 35):
-        shot_coords[shot] = (0, 29 - shot)
-    for shot in range(35, 45):
-        shot_coords[shot] = (-1, shot - 40)
-    for shot in range(45, 53):
-        shot_coords[shot] = (-2, 48 - shot)
-    for shot in range(53, 61):
-        shot_coords[shot] = (-3, shot - 57)
-    for shot in range(61, 67):
-        shot_coords[shot] = (-4, 63 - shot)
-    for shot in range(67, 69):
-        shot_coords[shot] = (-5, shot - 68)
+        wafer_info = {}
+        wafer_info['center_shot'] = 1
+        wafer_info['size'] = (5.5, 5.5)
+        wafer_info['name'] = 'Sample Wafer'
 
-    wafer_info = {}
-    wafer_info['center_shot'] = 1
-    wafer_info['size'] = (5.5, 5.5)
-    wafer_info['name'] = 'Sample Wafer'
+        chip_info = {}
+        chip_info['size'] = (2, 1)
+        chip_info['num'] = (6, 3)
+        chip_info['shot_pos'] = (3, 1)
 
-    chip_info = {}
-    chip_info['size'] = (2, 1)
-    chip_info['num'] = (6, 3)
-    chip_info['shot_pos'] = (3, 1)
+        values = {}
+        for shot in shot_coords:
+            values[shot] = float(np.random.rand(1))
 
-    values = {}
-    for shot in shot_coords:
-        values[shot] = float(np.random.rand(1))
-
-    return Wafer(shot_coords, wafer_info, chip_info, values=values)
+        return Wafer(shot_coords, wafer_info, chip_info, values=values)
