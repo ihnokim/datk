@@ -3,7 +3,7 @@ import pandas as pd
 
 
 def join(df1, df2):
-    ret = pd.concat([df1, df2], axis = 1, join = 'inner')
+    ret = pd.concat([df1, df2], axis=1, join='inner')
     return ret.loc[:, ~ret.columns.duplicated()]
 
 
@@ -12,14 +12,14 @@ def concat(dfs):
         if type(dfs) is pd.core.frame.DataFrame:
             return dfs
         else:
-            print('error: !!')
+            print('[ERROR] concat: type of the argument should be a list or pandas.core.frame.DataFrame')
             return None
     ret = dfs[0]
     for i in range(1, len(dfs)):
         ret = pd.concat([ret, dfs[i]], ignore_index=False, sort=False)
     ret = ret.reset_index()
     if 'index' in ret.columns:
-        ret = ret.drop('index', axis = 1)
+        ret = ret.drop('index', axis=1)
     return ret
 
 
@@ -86,7 +86,19 @@ def get_rect(coords):
     return (min_x, max_y), (max_x, min_y)
 
 
-class BaseDict():
+def dist(p, q):
+    if (type(p) is not tuple and type(p) is not list) or (type(q) is not tuple and type(q) is not list):
+        return np.abs(p - q)
+    if len(p) is not len(q):
+        print('[ERROR] dist: two vectors need to be in the same dimensions')
+        return 0
+    sum = 0
+    for i in range(len(p)):
+        sum += (p[i] - q[i]) ** 2
+    return np.sqrt(sum)
+
+
+class BaseDict(object):
     def __init__(self, dict={}):
         self.data = dict
     
