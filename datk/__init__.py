@@ -86,32 +86,52 @@ def get_rect(coords):
     return (min_x, max_y), (max_x, min_y)
 
 
-class ChainingDict():
+class BaseDict():
     def __init__(self, dict={}):
         self.data = dict
+    
+    def __setitem__(self, key, value):
+        self.data[key] = value
+    
+    def __getitem__(self, key):
+        return self.data[key]
 
-    def add(self, key, value):
+    def __str__(self):
+        return str(self.data)
+    
+    def __repr__(self):
+        return self.__str__()
+    
+    def __iter__(self):
+        return self.data.__iter__()
+    
+    def keys(self):
+        return self.data.keys()
+    
+    def values(self):
+        return self.data.values()
+    
+    def dict(self):
+        return self.data
+    
+    
+class ChainingDict(BaseDict):
+    def __setitem__(self, key, value):
         if key in self.data:
             self.data[key].append(value)
         else:
             self.data[key] = [value]
+    
+    def __str__(self):
+        return 'ChainingDict(' + str(self.data) + ')'
 
-    def dict(self):
-        return self.data
 
-
-class CoordsDict():
-    def __init__(self, dict={}):
-        self.data = {}
-
-    def add(self, coords, value):
-        self.data[coords] = value
-
-    def coords(self):
-        return np.array([[coord[0], coord[1]] for coord in self.data])
-
+class ArrayDict(BaseDict):
+    def keys(self):
+        return np.array(list(self.data.keys()))
+    
     def values(self):
-        return np.array([self.data[coord] for coord in self.data])
-
-    def dict(self):
-        return self.data
+        return np.array(list(self.data.values()))
+    
+    def __str__(self):
+        return 'ArrayDict(' + str(self.data) + ')'
