@@ -7,6 +7,23 @@ def join(df1, df2):
     return ret.loc[:, ~ret.columns.duplicated()]
 
 
+def grand_moments(groups, ddof=0):
+    # http://www.burtonsys.com/climate/composite_standard_deviations.html
+    N = 0
+    gs = 0
+    ess = 0
+    tgss = 0
+    for ((m, v), n) in groups:
+        N += n
+        gs += m * n
+        ess += v * (n - ddof)
+    gm = gs / N
+    for ((m, v), n) in groups:
+        tgss += (m - gm) ** 2 * n
+    gv = (ess + tgss) / (N - ddof)
+    return ((gm, gv), N)
+
+
 def concat(dfs):
     if type(dfs) is not list:
         if type(dfs) is pd.core.frame.DataFrame:
