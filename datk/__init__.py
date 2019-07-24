@@ -31,6 +31,23 @@ def remove_nan(*args):
         return tuple([[arg[i] for i in range(len(arg)) if keep_idx[i]] for arg in args])
 
 
+def corrcoef(v1, v2):
+    return np.corrcoef(remove_nan(v1, v2))[0, 1]
+
+
+def rsq(v1, v2):
+    return corrcoef(v1, v2) ** 2
+
+
+def mse(v1, v2):
+    a1, a2 = np.array(v1), np.array(v2)
+    return np.nanmean((a1 - a2) ** 2)
+
+
+def rmse(v1, v2):
+    return np.sqrt(mse(v1, v2))
+
+
 def get_labeled_value(labels, values, query):
     if type(query) is list:
         ret = []
