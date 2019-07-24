@@ -7,6 +7,19 @@ def join(df1, df2):
     return ret.loc[:, ~ret.columns.duplicated()]
 
 
+def get_labeled_value(labels, values, query):
+    if type(query) is list:
+        ret = []
+        for q in query:
+            ret.append(get_labeled_value(labels, values, q))
+        return ret
+    else:
+        if query in labels:
+            return values[labels.index(query)]
+        else:
+            return None
+
+
 def grand_moments(groups, ddof=0):
     # http://www.burtonsys.com/climate/composite_standard_deviations.html
     N = 0
