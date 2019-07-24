@@ -7,6 +7,30 @@ def join(df1, df2):
     return ret.loc[:, ~ret.columns.duplicated()]
 
 
+def remove_nan(*args):
+    n = -1
+    keep_idx = None
+    for arg in args:
+        
+        if type(arg) is not list and type(arg) is not np.ndarray:
+            print('[ERROR] remove_nan: type of the argument should be list or np.ndarray')
+            return None
+        if n == -1:
+            n = len(arg)
+            keep_idx = [~np.isnan(arg[i]) for i in range(n)]
+        else:
+            if n != len(arg):
+                print('[ERROR] remove_nan: the lengths of arguments should match')
+                return None
+            else:
+                for i in range(n):
+                    keep_idx[i] = keep_idx[i] and ~np.isnan(arg[i])
+    if len(args) == 1:
+        return [args[0][i] for i in range(len(args[0])) if keep_idx[i]]
+    else:
+        return tuple([[arg[i] for i in range(len(arg)) if keep_idx[i]] for arg in args])
+
+
 def get_labeled_value(labels, values, query):
     if type(query) is list:
         ret = []
@@ -42,7 +66,7 @@ def concat(dfs):
         if type(dfs) is pd.core.frame.DataFrame:
             return dfs
         else:
-            print('[ERROR] concat: type of the argument should be a list or pandas.core.frame.DataFrame')
+            print('[ERROR] concat: type of the argument should be list or pandas.core.frame.DataFrame')
             return None
     ret = dfs[0]
     for i in range(1, len(dfs)):
