@@ -193,6 +193,20 @@ def dist(p, q):
     return np.sqrt(sum)
 
 
+def get_labeled_coords_converter(source, target):
+    ret = {}
+    for s in source:
+        min_dist = float('inf')
+        min_label = -1
+        for t in target:
+            d = dist(source[s], target[t])
+            if d < min_dist:
+                min_dist = d
+                min_label = t
+        ret[s] = min_label
+    return ret
+
+
 class BaseDict(object):
     def __init__(self, dict={}):
         self.data = dict
