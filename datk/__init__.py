@@ -7,6 +7,30 @@ def join(df1, df2):
     return ret.loc[:, ~ret.columns.duplicated()]
 
 
+def get_column_indices(df):    
+    ret = {}
+    if df.index.name is None:
+        ret['index'] = 0
+    else:
+        ret[df.index.name] = 0
+    for i, c in enumerate(df.columns):
+        ret[c] = i + 1
+    return ret
+
+
+def convert_df_to_dict(df, keep_columns=None):
+    if keep_columns is None:
+        keep_columns = df.columns
+    ret = {}
+    col_idx = get_column_indices(df)
+    for row in df.itertuples():
+        val = []
+        for col in keep_columns:
+            val.append(row[col_idx[col]])
+        ret[row[0]] = val
+    return ret
+
+
 def remove_nan(*args):
     n = -1
     keep_idx = None
