@@ -85,15 +85,31 @@ def preinterpolate(img, value_points, window_size=None):
             proliferate(img, value_points, window_size=i)
 
 
-def extract_coords(value_points, normalization=False, img_shape=(0, 0)):
+def extract_coords(value_points, normalization=False, img_shape=None):
     if normalization:
-        if img_shape is not (0, 0):
+        if img_shape is not None:
             return np.array([[float(coord[0]) / img_shape[0], float(coord[1]) / img_shape[1]] for coord in value_points])
     return np.array([[coord[0], coord[1]] for coord in value_points])
 
 
 def extract_values(value_points):
     return np.array([value_points[coord] for coord in value_points])
+
+
+def fill_edge(points, values, edge):
+    ret_points = []
+    ret_values = []
+    for x in edge[0]:
+        for y in [edge[1][0], edge[1][-1]]:
+            i, _ = datk.get_nearest_neighbor((x, y), points)
+            ret_points.append((x, y))
+            ret_values.append(values[i])
+    for x in [edge[0][0], edge[0][-1]]:
+        for y in edge[1]:
+            i, _ = datk.get_nearest_neighbor((x, y), points)
+            ret_points.append((x, y))
+            ret_values.append(values[i])
+    return np.concatenate([np.array(points), np.array(ret_points)]), np.concatenate([np.array(values), np.array(ret_values)])
 
 
 class Wafer(object):
