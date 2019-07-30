@@ -182,7 +182,7 @@ def get_rect(coords):
 
 
 def dist(p, q):
-    if (type(p) is not tuple and type(p) is not list) or (type(q) is not tuple and type(q) is not list):
+    if (type(p) is not tuple and type(p) is not list and type(p) is not np.ndarray) or (type(q) is not tuple and type(q) is not list and type(q) is not np.ndarray):
         return np.abs(p - q)
     if len(p) is not len(q):
         print('[ERROR] dist: two vectors need to be in the same dimensions')
@@ -191,6 +191,19 @@ def dist(p, q):
     for i in range(len(p)):
         sum += (p[i] - q[i]) ** 2
     return np.sqrt(sum)
+
+
+def get_nearest_neighbor(x, vectors):
+    min_dist = float('inf')
+    min_idx = -1
+    min_vector = None
+    for i, v in enumerate(vectors):
+        d = dist(x, v)
+        if d < min_dist:
+            min_dist = d
+            min_idx = i
+            min_vector = v
+    return min_idx, min_vector
 
 
 def get_labeled_coords_converter(source, target):
