@@ -186,7 +186,7 @@ def dist(p, q):
         return np.abs(p - q)
     if len(p) is not len(q):
         print('[ERROR] dist: two vectors need to be in the same dimensions')
-        return 0
+        return None
     sum = 0
     for i in range(len(p)):
         sum += (p[i] - q[i]) ** 2
@@ -199,6 +199,8 @@ def get_nearest_neighbor(x, vectors):
     min_vector = None
     for i, v in enumerate(vectors):
         d = dist(x, v)
+        if d is None:
+            return None
         if d < min_dist:
             min_dist = d
             min_idx = i
