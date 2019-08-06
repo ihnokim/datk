@@ -5,6 +5,23 @@ from scipy.interpolate import griddata
 import datk
 
 
+def draw_labeled_value(subplot, labels, values, query):
+    value = datk.get_labeled_value(labels, values, query)
+    subplot.plot(query, value, '-o')
+
+
+def draw_labeled_values(subplot, labels, values, query):
+    labels = list(labels)
+    values = list(values)
+    idx = datk.get_labeled_index(labels[0], query)
+    if idx is None:
+        idx = []
+    elif type(idx) is not list:
+        idx = [idx]
+    for i in idx:
+        subplot.plot([i for i in range(1, len(labels) + 1)], [values[v][i] for v in range(len(values))], 'o', label=labels[0][i])
+
+
 def draw_coords(subplot, data, labels, annotate=True):
     data = np.array(data)
     labels = np.array(labels)
@@ -112,7 +129,7 @@ def fill_edge(points, values, edge):
     return np.concatenate([np.array(points), np.array(ret_points)]), np.concatenate([np.array(values), np.array(ret_values)])
 
 
-class Wafer(object):
+class MiniWafer(object):
 
     '''
     shot_coords\n
@@ -244,4 +261,4 @@ class Wafer(object):
         for shot in shot_coords:
             values[shot] = float(np.random.rand(1))
 
-        return Wafer(shot_coords, wafer_info, chip_info, values=values)
+        return MiniWafer(shot_coords, wafer_info, chip_info, values=values)
