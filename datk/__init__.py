@@ -72,11 +72,28 @@ def rmse(v1, v2):
     return np.sqrt(mse(v1, v2))
 
 
+def get_labeled_index(labels, query):
+    if type(query) is list:
+        ret = []
+        for q in query:
+            idx = get_labeled_index(labels, q)
+            if idx is not None:
+                ret.append(idx)
+        return ret
+    else:
+        if query in labels:
+            return labels.index(query)
+        else:
+            return None    
+
+
 def get_labeled_value(labels, values, query):
     if type(query) is list:
         ret = []
         for q in query:
-            ret.append(get_labeled_value(labels, values, q))
+            val = get_labeled_value(labels, values, q)
+            if val is not None:
+                ret.append(val)
         return ret
     else:
         if query in labels:
@@ -84,6 +101,19 @@ def get_labeled_value(labels, values, query):
         else:
             return None
 
+
+def get_labeled_values(labels, values, query):
+    ret = []
+    labels = list(labels)
+    values = list(values)
+    for i in range(len(labels)):
+        val = get_labeled_value(labels[i], values[i], query)
+        if val is None:
+            val = []
+        elif type(val) is not list:
+            val = [val]
+        ret.append(val)
+    return ret
 
 def grand_moments(groups, ddof=0):
     # http://www.burtonsys.com/climate/composite_standard_deviations.html
