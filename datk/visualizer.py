@@ -22,15 +22,59 @@ def draw_labeled_values(subplot, labels, values, query):
         subplot.plot([i for i in range(1, len(labels) + 1)], [values[v][i] for v in range(len(values))], 'o', label=labels[0][i])
 
 
-def draw_coords(subplot, data, labels, annotate=True):
-    data = np.array(data)
+def draw_coords(subplot, coords, labels, annotate=True):
+    coords = np.array(coords)
     labels = np.array(labels)
     for i, label in enumerate(set(labels)):
         indices = np.where(labels == label)[0]
-        group = data[indices, :]
+        group = coords[indices, :]
         subplot.scatter(group[:, 0], group[:, 1], label=label, s=50, alpha=0.7)
         if annotate:
             subplot.annotate(label, xy=(group[0][0], group[0][1]), xytext=(-5, 5), textcoords='offset points')
+
+
+def fill_edge(coords, values, edge):
+    ret_coords = []
+    ret_values = []
+    for x in edge[0]:
+        for y in [edge[1][0], edge[1][-1]]:
+            i, _ = datk.get_nearest_neighbor((x, y), coords)
+            ret_coords.append((x, y))
+            ret_values.append(values[i])
+    for x in [edge[0][0], edge[0][-1]]:
+        for y in edge[1]:
+            i, _ = datk.get_nearest_neighbor((x, y), coords)
+            ret_coords.append((x, y))
+            ret_values.append(values[i])
+    return np.concatenate([np.array(coords), np.array(ret_coords)]), np.concatenate([np.array(values), np.array(ret_values)])
+
+
+def draw_wafer(subplot, coords, values, labels=None, annotate=True, fontsize=10, cmap='jet_r', clim=None, size=(300, 300)):
+    if labels is None:
+        labels = values
+
+    rx, ry = size[0] / 2, size[1] / 2
+    edge = ([i for i in range(-int(rx), int(rx) + 1, int(size[0] / 6))], [i for i in range(-int(ry), int(ry) + 1, int(size[1] / 6))])
+    coords, values = fill_edge(coords, values, edge)
+
+    grid_x, grid_y = np.mgrid[-int(rx): int(rx) + 1: 1, -int(ry): int(ry) + 1: 1]
+    img = griddata(coords, values, (grid_x, grid_y), method='cubic')
+    ell = Ellipse((0, 0), size[0], size[1], fill=False)
+
+    subplot.add_patch(ell)
+    plot = subplot.imshow(img.T, cmap=cmap, interpolation='none', extent=(-int(rx), int(rx) + 1, -int(ry), int(ry) +  1), origin='lower', clip_path=ell, clip_on=True)
+
+    if annotate:
+        for i in range(len(labels)):
+            subplot.scatter(coords[i][0], coords[i][1], c='black', s=3)
+            if type(labels[i]) is float:
+                v = str(round(labels[i], 2))
+            else:
+                v = str(labels[i])
+            subplot.annotate(v, xy=coords[i], xytext=(0, 3), textcoords='offset points', ha='center', fontsize=fontsize)
+    if clim is not None:
+        plot.set_clim(clim)
+    return plot
 
 
 def legend(subplot, labels, colors):
@@ -111,22 +155,6 @@ def extract_coords(value_points, normalization=False, img_shape=None):
 
 def extract_values(value_points):
     return np.array([value_points[coord] for coord in value_points])
-
-
-def fill_edge(points, values, edge):
-    ret_points = []
-    ret_values = []
-    for x in edge[0]:
-        for y in [edge[1][0], edge[1][-1]]:
-            i, _ = datk.get_nearest_neighbor((x, y), points)
-            ret_points.append((x, y))
-            ret_values.append(values[i])
-    for x in [edge[0][0], edge[0][-1]]:
-        for y in edge[1]:
-            i, _ = datk.get_nearest_neighbor((x, y), points)
-            ret_points.append((x, y))
-            ret_values.append(values[i])
-    return np.concatenate([np.array(points), np.array(ret_points)]), np.concatenate([np.array(values), np.array(ret_values)])
 
 
 class MiniWafer(object):
