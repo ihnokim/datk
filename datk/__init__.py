@@ -31,6 +31,37 @@ def convert_df_to_dict(df, keep_columns=None):
     return ret
 
 
+def match(df1, df2, left, right, match_map):
+    left_col_idx = get_column_indices(df1)
+    right_col_idx = get_column_indices(df2)
+    ret_cols = {}
+    for col in left_col_idx:
+        if col in right_col_idx:
+            col = col + '_1'
+        ret_cols[col] = []
+    for col in right_col_idx:
+        if col in left_col_idx:
+            col = col + '_2'
+        ret_cols[col] = []
+    for left_row in df1.itertuples():
+        if left_row[left_col_idx[left]] not in match_map:
+            continue
+        for right_row in df2.itertuples():
+            if right_row[right_col_idx[right]] == match_map[left_row[left_col_idx[left]]]:
+                for left_col in left_col_idx:
+                    val = left_row[left_col_idx[left_col]]
+                    if left_col not in ret_cols:
+                        left_col = left_col + '_1'
+                    ret_cols[left_col].append(val)
+                for right_col in right_col_idx:
+                    val = right_row[right_col_idx[right_col]]
+                    if right_col not in ret_cols:
+                        right_col = right_col + '_2'
+                    ret_cols[right_col].append(val)
+
+    return pd.DataFrame(ret_cols)
+
+
 def remove_nan(*args):
     n = -1
     keep_idx = None
