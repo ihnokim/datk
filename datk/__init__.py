@@ -72,6 +72,40 @@ def rmse(v1, v2):
     return np.sqrt(mse(v1, v2))
 
 
+def filter_labeled_values(labels, values, query, boundary, include=True):
+    ret = []
+    for i, value in enumerate(get_labeled_values(labels, values, query)):
+        valid_label = get_labeled_value(labels[i], labels[i], query)
+        if type(valid_label) is not list:
+            valid_label = [valid_label]
+        for label in valid_label:
+            if label is None:
+                print('[ERROR] filter_labeled_values: no such label')
+                return None
+        valid_boundary_idx = get_labeled_index(query, valid_label)
+        
+        if type(boundary) is not list:
+            boundary = [boundary]
+
+        keep = True
+        for j, idx in enumerate(valid_boundary_idx):
+            lo = boundary[idx][0]
+            hi = boundary[idx][1]
+            
+            cond = (lo <= value[j] < hi)
+            if not include:
+                cond = not cond
+            if not cond:
+                keep = False
+                break
+        
+        if keep:
+            ret.append(True)
+        else:
+            ret.append(False)
+    return ret
+
+
 def get_labeled_index(labels, query):
     if type(query) is list:
         ret = []
@@ -84,7 +118,7 @@ def get_labeled_index(labels, query):
         if query in labels:
             return labels.index(query)
         else:
-            return None    
+            return None
 
 
 def get_labeled_value(labels, values, query):
@@ -114,6 +148,7 @@ def get_labeled_values(labels, values, query):
             val = [val]
         ret.append(val)
     return ret
+
 
 def grand_moments(groups, ddof=0):
     # http://www.burtonsys.com/climate/composite_standard_deviations.html
