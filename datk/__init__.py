@@ -1,5 +1,6 @@
 import numpy as np
 import pandas as pd
+from scipy import interpolate
 
 
 def join(df1, df2):
@@ -15,6 +16,17 @@ def get_column_indices(df):
         ret[df.index.name] = 0
     for i, c in enumerate(df.columns):
         ret[c] = i + 1
+    return ret
+
+
+def interpolate1d(x, y, sample):
+    if len(x) != len(y):
+        print('[ERROR] interpolate1d: len(x) != len(y)')
+        return None
+    tck = interpolate.splrep(x, y)
+    ret = []
+    for s in sample:
+        ret.append(interpolate.splev(s, tck))
     return ret
 
 
