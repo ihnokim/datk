@@ -3,6 +3,77 @@ from matplotlib.lines import Line2D
 from matplotlib.patches import Ellipse, Rectangle
 from scipy.interpolate import griddata
 import datk
+import math
+
+
+def fill_wafer(coords, values, n=0, radius=150):
+    c, v = coords, values
+    for n_tube in range(3, 3 + n):
+        c, v = preinterpolate(c, v, n_tube, radius, mode=0)
+        c, v = preinterpolate(c, v, n_tube, radius, mode=1)
+    return c, v
+
+
+def preinterpolate(coords, values, n_tubes, radius=150, mode=0):
+    sorted_data = sorted([(coords[i], values[i], datk.dist((0.0, 0.0), coords[i])) for i in range(len(coords))], key=lambda x: x[2])
+    ds = [i for i in range(0, radius + n_tubes, int(radius / n_tubes))]
+    n_blocks = [1] + [2 ** (i + 2) for i in range(n_tubes - 1)]
+
+    ret_coords = []
+    ret_values = []
+
+    last_idx = -1
+    for t in range(n_tubes):
+        min_d, max_d = ds[t], ds[t + 1]
+        center_d = (min_d + max_d) / 2
+        theta_offset = 360 / n_blocks[t]
+        for b in range(n_blocks[t]):
+            if mode == 0:
+                min_theta, max_theta = (b - 1 / 2) * theta_offset, (b + 1 / 2) * theta_offset
+            elif mode == 1:
+                min_theta, max_theta = b * theta_offset, (b + 1) * theta_offset
+            center_theta = min_theta + theta_offset / 2
+            if b == 0:
+                if mode == 0:
+                    center_theta = 0.0
+                elif mode == 1:
+                    center_theta = min_theta + theta_offset / 2
+            if t == 0:
+                center_d = 0.0
+            center_x, center_y = center_d * math.cos(math.radians(center_theta)), center_d * math.sin(math.radians(center_theta))
+            tmp_idx = last_idx
+            total = 0
+            cnt = 0
+            for i in range(last_idx + 1, len(sorted_data)):
+                include = False
+                if min_d <= sorted_data[i][2] < max_d:
+                    theta = math.degrees(math.atan2(sorted_data[i][0][1], sorted_data[i][0][0]))
+                    if theta < 0:
+                        theta = 360 + theta
+
+                    if mode == 0:
+                        if b == 0:
+                            if min_theta + 360 <= theta < 360 or 0 <= theta < max_theta:
+                                include = True
+                    elif mode == 1:
+                        if b == 0:
+                            if min_theta <= theta < max_theta:
+                                include = True
+                    if b != 0:
+                        if min_theta <= theta < max_theta:
+                            include = True
+                    if include:
+                        tmp_idx = i
+                        if not np.isnan(sorted_data[i][1]):
+                            total += sorted_data[i][1]
+                            cnt += 1
+                elif max_d <= sorted_data[i][2]:
+                    break
+            if cnt != 0:
+                ret_coords.append((center_x, center_y))
+                ret_values.append(total / cnt)
+        last_idx = tmp_idx
+    return np.concatenate([np.array(coords), np.array(ret_coords)]), np.concatenate([np.array(values), np.array(ret_values)]) 
 
 
 def draw_labeled_value(subplot, labels, values, query):
@@ -124,7 +195,7 @@ def proliferate(img, value_points, window_size=5):
                 value_points[x, y] = val
 
 
-def preinterpolate(img, value_points, window_size=None):
+def deprecated_preinterpolate(img, value_points, window_size=None):
     min_dist = datk.dist(img.shape, (0, 0))
     max_dist = 0.0
     for coord1 in value_points:
@@ -243,7 +314,7 @@ class MiniWafer(object):
 
     def interpolate(self, window_size=None):
         macchiato(self.img, self.values)
-        preinterpolate(self.img, self.values, window_size=window_size)
+        deprecated_preinterpolate(self.img, self.values, window_size=window_size)
         points = extract_coords(self.values, normalization=True, img_shape=self.img.shape)
         values = extract_values(self.values)
         grid_x, grid_y = np.mgrid[0: 1: self.img_w * 1j, 0: 1: self.img_h * 1j]
