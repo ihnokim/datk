@@ -73,7 +73,7 @@ def preinterpolate(coords, values, n_tubes, radius=150, mode=0):
                 ret_coords.append((center_x, center_y))
                 ret_values.append(total / cnt)
         last_idx = tmp_idx
-    return np.concatenate([np.array(coords), np.array(ret_coords)]), np.concatenate([np.array(values), np.array(ret_values)]) 
+    return np.concatenate([np.array(coords), np.array(ret_coords)]), np.concatenate([np.array(values), np.array(ret_values)])
 
 
 def draw_labeled_value(subplot, labels, values, query):
@@ -120,12 +120,13 @@ def fill_edge(coords, values, edge):
     return np.concatenate([np.array(coords), np.array(ret_coords)]), np.concatenate([np.array(values), np.array(ret_values)])
 
 
-def draw_wafer(subplot, coords, values, labels=None, annotate=True, fontsize=10, cmap='jet_r', clim=None, size=(300, 300)):
+def draw_wafer(subplot, coords, values, labels=None, annotate=True, fontsize=10, cmap='jet_r', clim=None, size=(300, 300), interpolate=0):
     if labels is None:
         labels = values
 
     rx, ry = size[0] / 2, size[1] / 2
     edge = ([i for i in range(-int(rx), int(rx) + 1, int(size[0] / 6))], [i for i in range(-int(ry), int(ry) + 1, int(size[1] / 6))])
+    coords, values = fill_wafer(coords, values, interpolate, int(min(rx, ry)))
     coords, values = fill_edge(coords, values, edge)
 
     grid_x, grid_y = np.mgrid[-int(rx): int(rx) + 1: 1, -int(ry): int(ry) + 1: 1]
