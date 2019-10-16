@@ -1,8 +1,10 @@
+import os
 import math
 import numpy as np
+import pandas as pd
+from scipy import interpolate
 
-
-def smart_arccos(wl, value, threshold = 0.01):
+def smart_arccos(wl, value, threshold=0.01):
     if len(wl) != len(value):
         print('[ERROR] smart_arccos: len(wl) != len(value)')
         return None
@@ -46,3 +48,24 @@ def jones_rotate(degree):
     ret[1, 0] = np.sin(radian) * -1.0
     ret[1, 1] = np.cos(radian)
     return ret
+
+
+def get_nk(source, wl=[]):
+    if type(source) is str:
+        if os.path.isfile(source):
+            nk_table = pd.read_csv(source)
+        elif source == 'air':
+            return np.array([complex(1.0, 0.0) for _ in wl])
+    elif type(source) is pd.core.frame.DataFrame:
+        nk_table = source
+    else:
+        print('[ERROR] type of the argument should be str or pandas.core.frame.DataFrame')
+    if len(wl) == 0:
+        wl = np.array(nk_table.wl)
+        n = np.array(nk_table.n)
+        k = np.array(nk_table.k)
+    else:
+        raw_wl = np.array(nk_table.wl)
+        n = interpolate.interp1d(raw_wl, np.array(nk_table.n))(wl)
+        k = interpolate.interp1d(raw_wl, np.array(nk_table.k))(wl)
+    return np.array([complex(r, i) for r, i in np.stack([n, k], axis=1)])
