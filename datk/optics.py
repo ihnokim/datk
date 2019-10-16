@@ -32,3 +32,7 @@ def smart_arccos(wl, value, threshold = 0.01):
                     tmp.append(-arccos[j])
         ret.append(np.array(tmp))
     return ret
+
+
+def cauchy(wl, n, k):
+    return np.array([complex(n[0] + n[1] / w ** 2 + n[2] / w ** 4, k[0] + k[1] / w ** 2 + k[2] / w ** 4) for w in wl])
