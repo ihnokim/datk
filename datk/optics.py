@@ -36,3 +36,13 @@ def smart_arccos(wl, value, threshold = 0.01):
 
 def cauchy(wl, n, k):
     return np.array([complex(n[0] + n[1] / w ** 2 + n[2] / w ** 4, k[0] + k[1] / w ** 2 + k[2] / w ** 4) for w in wl])
+
+
+def jones_rotate(degree):
+    radian = degree * math.pi / 180.0
+    ret = np.eye(2, dtype=complex)
+    ret[0, 0] = np.cos(radian)
+    ret[0, 1] = np.sin(radian)
+    ret[1, 0] = np.sin(radian) * -1.0
+    ret[1, 1] = np.cos(radian)
+    return ret
