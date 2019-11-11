@@ -1,4 +1,5 @@
 import numpy as np
+import matplotlib.pyplot as plt
 from matplotlib.lines import Line2D
 from matplotlib.patches import Ellipse, Rectangle
 from scipy.interpolate import griddata
@@ -156,11 +157,11 @@ def legend(subplot, labels, colors):
     subplot.legend(lines, labels, loc='best', borderpad=0.7)
 
 
-def draw_nsigma(subplot, x, mu, sigma, n=3, color='r', alpha=0.1, label=''):
+def draw_nsigma(subplot, x, mu, sigma, n=3, color='r', alpha=0.1, linestyle='solid', label=''):
     mu = np.array(mu)
     sigma = np.array(sigma)
 
-    subplot.plot(x, mu, color, label=label)
+    subplot.plot(x, mu, color, linestyle=linestyle, label=label)
     for i in range(1, n + 1):
         subplot.fill_between(x, mu - sigma * i, mu + sigma * i, color=color, alpha=alpha)
 
@@ -227,6 +228,77 @@ def extract_coords(value_points, normalization=False, img_shape=None):
 
 def extract_values(value_points):
     return np.array([value_points[coord] for coord in value_points])
+
+
+class DataPainter():
+    def __init__(self, fmt=None, ax=None):
+        self.pressed = False
+        if ax is None:
+            fig = plt.figure()
+            self.ax = fig.add_subplot(111)
+            self.xdata = []
+            self.ydata = []
+            self.line = self.ax.plot(self.xdata, self.ydata)[0]
+        else:
+            self.ax = ax
+            if len(self.ax.get_lines()) > 0:
+                self.line = self.ax.get_lines()[0]
+                data = self.line.get_data()
+                self.xdata, self.ydata = list(data[0]), list(data[1])
+        self.fignum = self.ax.figure.number
+                
+    def show(self):
+        if plt.fignum_exists(self.fignum) is False:
+            fig = plt.figure()
+            fig.suptitle('DataPainter')
+            self.ax = fig.add_subplot(111)
+            self.line = self.ax.plot(self.xdata, self.ydata)[0]
+            self.fignum = self.ax.figure.number
+        self.connect()
+        plt.show(block=False)
+    
+    def connect(self):
+        self.cid_press = self.ax.figure.canvas.mpl_connect(
+            'button_press_event', self.on_press)
+        self.cid_release = self.ax.figure.canvas.mpl_connect(
+            'button_release_event', self.on_release)
+        self.cid_motion = self.ax.figure.canvas.mpl_connect(
+            'motion_notify_event', self.on_motion)
+        return self
+
+    def clear(self):
+        self.xdata = []
+        self.ydata = []
+        self.line.set_data(self.xdata, self.ydata)
+        self.ax.figure.canvas.draw()
+
+    def disconnect(self):
+        self.ax.figure.canvas.mpl_disconnect(self.cid_press)
+        self.ax.figure.canvas.mpl_disconnect(self.cid_release)
+        self.ax.figure.canvas.mpl_disconnect(self.cid_motion)
+
+    def close(self):
+        self.disconnect()
+        plt.close(self.ax.figure)
+
+    def on_press(self, event):
+        if event.inaxes != self.ax:
+            return
+        self.pressed = True
+    
+    def on_motion(self, event):
+        if event.inaxes != self.ax:
+            return
+        if self.pressed:
+            self.xdata.append(event.xdata)
+            self.ydata.append(event.ydata)
+            self.line.set_data(self.xdata, self.ydata)
+            self.ax.figure.canvas.draw()
+    
+    def on_release(self, event):
+        if event.inaxes != self.ax:
+            return
+        self.pressed = False
 
 
 class MiniWafer(object):
