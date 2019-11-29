@@ -77,11 +77,23 @@ def preinterpolate(coords, values, n_tubes, radius=150, mode=0):
     return np.concatenate([np.array(coords), np.array(ret_coords)]), np.concatenate([np.array(values), np.array(ret_values)])
 
 
+def draw_pdf(subplot, data, bins=10, ddof=0, color=None, annotate=False, fontsize=10):
+    y, x, _ = subplot.hist(data, bins, density=True, color=color)
+    mu, sigma = np.mean(data), np.std(data, ddof=ddof)
+    subplot.plot(x, 1 / (sigma * np.sqrt(2 * np.pi)) * np.exp(-(x - mu) ** 2 / (2 * sigma ** 2)), linewidth=3, color='r')
+    if annotate:
+        for i in range(len(y)):
+            subplot.text(x=x[i], y=y[i],
+                     s='{:.2f}%'.format(y[i] * 100),
+                     fontsize=fontsize,
+                     color='black')
+
+
 def draw_labeled_value(subplot, labels, values, query):
     value = datk.get_labeled_value(labels, values, query)
     subplot.plot(query, value, '-o')
 
-
+    
 def draw_labeled_values(subplot, labels, values, query):
     labels = list(labels)
     values = list(values)
