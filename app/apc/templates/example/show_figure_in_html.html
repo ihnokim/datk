@@ -1,0 +1,12 @@
+<html>
+  <head>
+    <title>Random normal - N({{ mean }}, {{ var }})</title>
+  </head>
+  <body>
+    <h1>This is random normal image</h1>
+    <h3>This is h3 </h3>
+    <p>This is the paragraph</p>
+      <img src="{{ url_for('show_figure_alone', mean=mean, var=var, bins=bins) }}" alt="Image Placeholder" 
+      width={{ width }}, height={{ height }}>
+  </body>
+</html>
