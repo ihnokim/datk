@@ -74,6 +74,25 @@ def match(df1, df2, left, right, match_map):
     return pd.DataFrame(ret_cols)
 
 
+def extract_hashmap(df, key, value, encoding='utf-8'):
+    ret = {}
+    if type(df) is str:
+        df = pd.read_csv(df, encoding=encoding)
+    elif type(df) is pd.core.frame.DataFrame:
+        'do nothing'
+    else:
+        print('[ERROR] extract_hashmap: type of the argument should be str or pandas.core.DataFrame')
+        return ret
+    
+    for i, row in df.iterrows():
+        k = row[key]
+        if type(value) is list:
+            ret[k] = [row[v] for v in value]
+        else:
+            ret[k] = row[value]
+    return ret
+
+
 def remove_nan(*args):
     n = -1
     keep_idx = None
