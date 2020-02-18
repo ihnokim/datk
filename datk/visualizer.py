@@ -2,6 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.lines import Line2D
 from matplotlib.patches import Ellipse, Rectangle
+from matplotlib import colors as plt_colors
 from scipy.interpolate import griddata
 import datk
 import math
@@ -157,6 +158,39 @@ def draw_wafer(subplot, coords, values, labels=None, annotate=True, fontsize=10,
             else:
                 v = str(labels[i])
             subplot.annotate(v, xy=coords[i], xytext=(0, 3), textcoords='offset points', ha='center', fontsize=fontsize)
+    if clim is not None:
+        plot.set_clim(clim)
+    return plot
+
+
+def draw_chip_wafer(subplot, coords, values=None, clim=None, cmap=['limegreen', 'red']):
+    coords = np.array(coords)
+    max_x, min_x = max(coords[:, 0]), min(coords[:, 0])
+    max_y, min_y = max(coords[:, 1]), min(coords[:, 1])
+    n_x = max_x - min_x + 1
+    n_y = max_y - min_y + 1
+    
+    img = np.empty((n_x, n_y))
+    img[:] = np.nan
+    
+    for idx in range(0, coords.shape[0]):
+        chipY = int(coords[idx, 1]) - min(coords[:, 1])
+        chipX = int(coords[idx, 0]) - min(coords[:, 0])
+        if values is None:
+            img[chipX, chipY] = np.random.randint(0, 2)
+        else:
+            img[chipX, chipY] = values[idx]
+    ell = Ellipse(((img.shape[0] - 1) / 2, (img.shape[1] - 1) / 2), (img.shape[0] + 1), (img.shape[1] + 1), fill=True, color='lightgray', alpha=0.33)
+    
+    subplot.add_patch(ell)
+    subplot.tick_params(axis='both', which='both', labelbottom=False, labelleft=False, bottom=False, left=False)
+    subplot.set_xticks(np.arange(0.5, n_x, 1))
+    subplot.set_yticks(np.arange(0.5, n_y, 1))
+    
+    subplot.grid(linewidth=1.8, color='lightgray')
+    if type(cmap) is list:
+        cmap = plt_colors.ListedColormap(cmap)
+    plot = subplot.imshow(img.T, cmap=cmap, aspect=n_x / n_y, clip_path=ell, clip_on=True)
     if clim is not None:
         plot.set_clim(clim)
     return plot
