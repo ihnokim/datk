@@ -30,19 +30,6 @@ def interpolate1d(x, y, sample):
     return ret
 
 
-def convert_df_to_dict(df, keep_columns=None):
-    if keep_columns is None:
-        keep_columns = df.columns
-    ret = {}
-    col_idx = get_column_indices(df)
-    for row in df.itertuples():
-        val = []
-        for col in keep_columns:
-            val.append(row[col_idx[col]])
-        ret[row[0]] = val
-    return ret
-
-
 def match(df1, df2, left, right, match_map):
     left_col_idx = get_column_indices(df1)
     right_col_idx = get_column_indices(df2)
@@ -72,6 +59,24 @@ def match(df1, df2, left, right, match_map):
                     ret_cols[right_col].append(val)
 
     return pd.DataFrame(ret_cols)
+
+
+def extract_rows(df, keep_columns=None, ignore_index=False):
+    if keep_columns is None:
+        keep_columns = df.columns
+    if ignore_index:
+        ret = []
+    else:
+        ret = {}
+    for i, row in df.iterrows():
+        val = []
+        for col in keep_columns:
+            val.append(row[col])
+        if ignore_index:
+            ret.append(val)
+        else:
+            ret[i] = val
+    return ret
 
 
 def extract_hashmap(df, key, value, encoding='utf-8'):
