@@ -226,39 +226,55 @@ def concat(dfs):
     return ret
 
 
-def search(df, query, by='value'):
+def op_decoder(df, query):
+    op = ''
+    for t in ['<=', '>=', '=', '<', '>']:
+        if t in query:
+            op = t
+            break
+    if op == '':
+        return [False]
+    c, v = query.split(op)
+    c = c.strip()
+    v = v.strip()
+    
+    dtype = type(df[c].iloc[0])
+    if op == '=':
+        return df[c] == dtype(v)
+    elif op == '<':
+        return df[c] < dtype(v)
+    elif op == '>':
+        return df[c] > dtype(v)
+    elif op == '<=':
+        return df[c] <= dtype(v)
+    elif op == '>=':
+        return df[c] >= dtype(v)
+    else:
+        return [False]
+
+    
+def search(df, query, query_type='and'):
     ret = df.loc[[False], :]
     if len(df) <= 0:
         pass
-
-    elif by == 'index':
-        if type(query) is not list:
-            query = [query]
-        ret = df.loc[query, :]
-
     elif type(query) is list:
-        if by == 'value':
+        if query_type == 'and':
+            cond = [True for _ in range(len(df))]
+        elif query_type == 'or':
             cond = [False for _ in range(len(df))]
-            for q in query:
-                # indices += search(df, q, by, dtype)
-                c, v = q.split('=')
-                c = c.strip()
-                v = v.strip()
-                dtype = type(df[c].iloc[0])
-                cond = (df[c] == dtype(v)) | cond
-            ret = df.loc[cond, :]
-
+        else:
+            print('[ERROR] search: query_type should be "and" or "or"')
+            return ret
+        for q in query:
+            if query_type == 'and':
+                cond = op_decoder(df, q) & cond
+            elif query_type == 'or':
+                cond = op_decoder(df, q) | cond
+        ret = df.loc[cond, :]
     elif type(query) is str:
-        if by == 'value':
-            c, v = query.split('=')
-            c = c.strip()
-            v = v.strip()
-            dtype = type(df[c].iloc[0])
-            ret = df.loc[df[c] == dtype(v), :]
-
+        ret = df.loc[op_decoder(df, query), :]
     else:
-        pass
-
+        print('[ERROR] search: type of the argument should be str or list')
     return ret
 
 
