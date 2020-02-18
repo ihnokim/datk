@@ -1,6 +1,7 @@
 import numpy as np
 import pandas as pd
 from scipy import interpolate
+from scipy.spatial import distance
 
 
 def join(df1, df2):
@@ -27,6 +28,28 @@ def interpolate1d(x, y, sample):
     ret = []
     for s in sample:
         ret.append(interpolate.splev(s, tck))
+    return ret
+
+
+def interpolate2d(x, y, sample):
+    if len(x) != len(y):
+        print('[ERROR] interpolate2d: len(x) != len(y)')
+        return None
+    ret = []
+    for s in sample:
+        d = sorted([(i, distance.euclidean(s, k)) for i, k in enumerate(x)], key=lambda x: x[1])[: 6]
+        if d[0][1] == 0.0:
+            ret.append(y[d[0][0]])
+            continue
+        else:
+            d = d[:5]
+        r = 0
+        w = 0
+        for idx, dist in d:
+            v = y[idx]
+            r += (v / dist ** 2)
+            w += (1 / dist ** 2)
+        ret.append(r / w)
     return ret
 
 
@@ -79,16 +102,8 @@ def extract_rows(df, keep_columns=None, ignore_index=False):
     return ret
 
 
-def extract_hashmap(df, key, value, encoding='utf-8'):
+def extract_hashmap(df, key, value):
     ret = {}
-    if type(df) is str:
-        df = pd.read_csv(df, encoding=encoding)
-    elif type(df) is pd.core.frame.DataFrame:
-        'do nothing'
-    else:
-        print('[ERROR] extract_hashmap: type of the argument should be str or pandas.core.DataFrame')
-        return ret
-    
     for i, row in df.iterrows():
         k = row[key]
         if type(value) is list:
