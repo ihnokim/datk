@@ -11,7 +11,7 @@ import pymysql
 
 
 app = Flask(__name__)
-host_addr = '127.0.0.1'
+host_addr = '0.0.0.0'
 port_num = '8080'
 
 
