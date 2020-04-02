@@ -2,6 +2,13 @@ import numpy as np
 import pandas as pd
 from scipy import interpolate
 from scipy.spatial import distance
+import requests
+import json
+
+
+def get_json(host, path, params):
+    url = host + path
+    return json.loads(requests.get(url, json=params).json())
 
 
 def join(df1, df2):
