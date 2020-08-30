@@ -4,6 +4,14 @@ from scipy import interpolate
 from scipy.spatial import distance
 import requests
 import json
+from configparser import ConfigParser
+
+
+def get_config(filename, section='DB_CONN_INFO'):
+    cfg = ConfigParser()
+    cfg.read(filename)
+    items = cfg.items(section)
+    return {item[0]: item[1] for item in items}
 
 
 def get_json(host, path, params):
@@ -17,7 +25,7 @@ def join(df1, df2):
 
 
 def get_column_indices(df):    
-    ret = {}
+    ret = dict()
     if df.index.name is None:
         ret['index'] = 0
     else:
@@ -32,7 +40,7 @@ def interpolate1d(x, y, sample):
         print('[ERROR] interpolate1d: len(x) != len(y)')
         return None
     tck = interpolate.splrep(x, y)
-    ret = []
+    ret = list()
     for s in sample:
         ret.append(interpolate.splev(s, tck))
     return ret
@@ -42,7 +50,7 @@ def interpolate2d(x, y, sample):
     if len(x) != len(y):
         print('[ERROR] interpolate2d: len(x) != len(y)')
         return None
-    ret = []
+    ret = list()
     for s in sample:
         d = sorted([(i, distance.euclidean(s, k)) for i, k in enumerate(x)], key=lambda x: x[1])[: 6]
         if d[0][1] == 0.0:
@@ -63,15 +71,15 @@ def interpolate2d(x, y, sample):
 def match(df1, df2, left, right, match_map):
     left_col_idx = get_column_indices(df1)
     right_col_idx = get_column_indices(df2)
-    ret_cols = {}
+    ret_cols = dict()
     for col in left_col_idx:
         if col in right_col_idx:
             col = col + '_1'
-        ret_cols[col] = []
+        ret_cols[col] = list()
     for col in right_col_idx:
         if col in left_col_idx:
             col = col + '_2'
-        ret_cols[col] = []
+        ret_cols[col] = list()
     for left_row in df1.itertuples():
         if left_row[left_col_idx[left]] not in match_map:
             continue
@@ -95,11 +103,11 @@ def extract_rows(df, keep_columns=None, ignore_index=False):
     if keep_columns is None:
         keep_columns = df.columns
     if ignore_index:
-        ret = []
+        ret = list()
     else:
-        ret = {}
+        ret = dict()
     for i, row in df.iterrows():
-        val = []
+        val = list()
         for col in keep_columns:
             val.append(row[col])
         if ignore_index:
@@ -110,7 +118,7 @@ def extract_rows(df, keep_columns=None, ignore_index=False):
 
 
 def extract_hashmap(df, key, value):
-    ret = {}
+    ret = dict()
     for i, row in df.iterrows():
         k = row[key]
         if type(value) is list:
@@ -162,7 +170,7 @@ def rmse(v1, v2):
 
 
 def filter_labeled_values(labels, values, query, boundary, include=True):
-    ret = []
+    ret = list()
     for i, value in enumerate(get_labeled_values(labels, values, query)):
         valid_label = get_labeled_value(labels[i], labels[i], query)
         if type(valid_label) is not list:
@@ -197,7 +205,7 @@ def filter_labeled_values(labels, values, query, boundary, include=True):
 
 def get_labeled_index(labels, query):
     if type(query) is list:
-        ret = []
+        ret = list()
         for q in query:
             idx = get_labeled_index(labels, q)
             if idx is not None:
@@ -212,7 +220,7 @@ def get_labeled_index(labels, query):
 
 def get_labeled_value(labels, values, query):
     if type(query) is list:
-        ret = []
+        ret = list()
         for q in query:
             val = get_labeled_value(labels, values, q)
             if val is not None:
@@ -226,7 +234,7 @@ def get_labeled_value(labels, values, query):
 
 
 def get_labeled_values(labels, values, query):
-    ret = []
+    ret = list()
     labels = list(labels)
     values = list(values)
     for i in range(len(labels)):
@@ -325,7 +333,7 @@ def search(df, query, query_type='and'):
 
 
 def get_primes(n):
-    primes = []
+    primes = list()
     if n < 2:
         return primes
     for i in range(2, n):
@@ -379,7 +387,7 @@ def get_nearest_neighbor(x, vectors):
 
 
 def get_labeled_coords_converter(source, target):
-    ret = {}
+    ret = dict()
     for s in source:
         min_dist = float('inf')
         min_label = -1
