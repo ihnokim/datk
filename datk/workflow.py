@@ -21,17 +21,20 @@ class Status(Enum):
 class Scheduler:
     def __init__(self, config=None):
         if config is not None:
-            self.mc = MongoDB(config)
-            jobstores = {
-                'default': MongoDBJobStore(database=config['db'], collection=config['collection'], client=self.mc.client)
-            }
-            self.scheduler = BackgroundScheduler(jobstores=jobstores)
+            try:
+                self.config = config
+                self.mc = MongoDB(config)
+                self.jobs_collection = self.config['collection'] + '_jobs'
+                self.scheduler_collection = self.config['collection'] + '_scheduler'
+                jobstores = {
+                    'default': MongoDBJobStore(database=self.config['db'], collection=self.jobs_collection, client=self.mc.client)
+                }
+                self.scheduler = BackgroundScheduler(jobstores=jobstores)
+            except Exception as e:
+                self.scheduler = BackgroundScheduler()
         else:
             self.scheduler = BackgroundScheduler()
-        
         self.scheduler.start()
-        self.add_job = self.scheduler.add_job
-        self.remove_job = self.scheduler.remove_job
     
     def __del__(self):
         self.shutdown()
@@ -39,18 +42,28 @@ class Scheduler:
     def shutdown(self):
         self.scheduler.shutdown()
         self.mc.close()
+        
+    def add_job(self, func, id, trigger, **kwargs):
+        self.mc.insert_one(self.scheduler_collection, data={'workflow_id': id, 'trigger': trigger}, keys=['workflow_id'])
+        return self.scheduler.add_job(func=func, id=id, trigger=trigger, **kwargs)
+    
+    def remove_job(self, id, **kwargs):
+        self.mc.remove(self.scheduler_collection, query={'workflow_id': id})
+        return self.scheduler.remove_job(job_id=id, **kwargs)
 
 
 class Task:
     def __init__(self, task_id, action=None, args=None):
         self.task_id = task_id
+        self.action = action
+        self.args = args
+        self.init()
+    
+    def init(self):
         self.parents = dict()
         self.children = dict()
         self.inheritance = dict()
-    
-        self.action = action
-        self.args = args
-        self.wait_for = dict() # parent task_id -> arg
+        self.wait_for = dict()
         self.status = Status.NEW
     
     def get_ready(self):
@@ -75,7 +88,7 @@ class Task:
         return None
     
     def __str__(self):
-        return '%s(ID: %s, ACTION: %s, ARGS: %s, STATUS: %s)' % (self.__class__.__name__, self.task_id, self.action.__name__, inspect.getargspec(self.action), self.status)
+        return '%s(ID: %s, ACTION: %s, ARGS: %s, WAIT_FOR: %s, STATUS: %s)' % (self.__class__.__name__, self.task_id, self.action.__name__, inspect.getargspec(self.action).args, self.wait_for, self.status)
     
     def __repr__(self):
         return self.__str__()
@@ -109,6 +122,28 @@ class Task:
     @staticmethod
     def from_binary(b):
         return dill.loads(b)
+    
+    def to_db(self, config, update=False):
+        self.get_ready()
+        mc = MongoDB(config)
+        tmp = dict()
+        tmp['task_id'] = self.task_id
+        tmp['binary'] = self.to_binary()
+        tmp['structure'] = self.__str__()
+        if self.action.__doc__ is not None:
+            tmp['description'] = self.action.__doc__.strip()
+        else:
+            tmp['description'] = ''
+        mc.insert_one(collection=config['collection'], data=tmp, keys=['task_id'], overwrite=update)
+    
+    @staticmethod
+    def from_db(task_id, config):
+        mc = MongoDB(config)
+        ret = mc.db[config['collection']].find_one({'task_id': task_id})
+        if ret is None:
+            return ret
+        else:
+            return Task.from_binary(ret['binary'])
     
     
 class Workflow:
@@ -150,7 +185,15 @@ class Workflow:
     
     def __repr__(self):
         return self.__str__()
-
+    
+    def set_args(self, args):
+        for t_id in args:
+            if t_id not in self.args:
+                continue
+            for k, v in args[t_id].items()
+                self.args[t_id][k] = v
+            self.init()
+    
     def get_leaves(self):
         leaves = set()
         q = Queue()
