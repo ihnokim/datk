@@ -1,8 +1,13 @@
 import abc
+import numpy as np
 
 
 class Interface:
     __metaclass__ = abc.ABCMeta
+    
+    @abc.abstractmethod
+    def __init__(self, config):
+        pass
     
     @abc.abstractmethod
     def test(self):
@@ -16,6 +21,10 @@ class Interface:
     def insert(self):
         pass
     
+    @abc.abstractmethod
+    def remove(self):
+        pass
+    
     @staticmethod
     @abc.abstractmethod
     def connect(config):
@@ -24,3 +33,13 @@ class Interface:
     @abc.abstractmethod
     def disconnect(self):
         pass
+
+
+def isnan(value):
+    ret = False
+    try:
+        ret = np.isnan(value)
+    except Exception:
+        pass
+    finally:
+        return ret

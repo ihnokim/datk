@@ -5,7 +5,7 @@ import dill, bson
 from apscheduler.jobstores.base import JobLookupError
 from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.jobstores.mongodb import MongoDBJobStore
-from interface.mongodb import MongoDB
+from datk.interface.mongodb import MongoDB
 import time
 import inspect
 
@@ -190,7 +190,7 @@ class Workflow:
         for t_id in args:
             if t_id not in self.args:
                 continue
-            for k, v in args[t_id].items()
+            for k, v in args[t_id].items():
                 self.args[t_id][k] = v
             self.init()
     
@@ -274,7 +274,7 @@ class Workflow:
                 tmp['description'][t_id] = ''
         mc.insert_one(collection=config['collection'], data=tmp, keys=['workflow_id'], overwrite=update)
     
-    @sataticmethod
+    @staticmethod
     def from_db(workflow_id, config):
         mc = MongoDB(config)
         ret = mc.db[config['collection']].find_one({'workflow_id': workflow_id})

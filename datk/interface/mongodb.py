@@ -1,5 +1,5 @@
 from pymongo import MongoClient
-from datk.interface.Interface import Interface
+from datk.interface import Interface
 
 
 class MongoDB(Interface):
@@ -29,9 +29,16 @@ class MongoDB(Interface):
             self.db[collection].update(ks, {'$set': ds}, upsert=True, multi=False)
         else:
             self.db[collection].insert_one(data)
+    
+    def insert_many(self, collection, data, overwrite=True):
+        for d in data:
+            self.insert_one(collection, d, overwrite=overwrite)
 
     def select(self, collection, query):
         return list(self.db[collection].find(query))
+    
+    def remove(self, collection, query):
+        return self.db[collection].remove(query)
     
     def close(self):
         if not self.closed:
