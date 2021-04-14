@@ -4,9 +4,11 @@ from datk.interface import Interface
 
 class MSSQL(Interface):
     def __init__(self, config):
+        super().__init__(config)
         self.config = config
     
     def query(self, q):
+        conn = None
         ret = list()
         try:
             conn = pymssql.connect(host=self.config['ip'], port=int(self.config['port']),
@@ -68,8 +70,10 @@ class MSSQL(Interface):
         q = self.make_exec_query(procedure, **kwargs)
         return self.query(q)
     
-    def exec_many(self, procedure, params=[]):
+    def exec_many(self, procedure, params=None):
         qs = list()
+        if params is None:
+            params = list()
         for param in params:
             qs.append(self.make_exec_query(procedure, **param))
         return self.query(qs)
@@ -92,16 +96,18 @@ class MSSQL(Interface):
     
     def close(self):
         pass
-    
+
     @staticmethod
-    def query_encoder(custom_op={}, **kwargs):
+    def query_encoder(custom_op=None, **kwargs):
         tokens = list()
+        if custom_op is None:
+            custom_op = dict()
         for k, v in kwargs.items():
             if type(v) is list:
                 tokens.append(k + " in ('{}')".format("', '".join([str(x) for x in v])))
             else:
                 tokens.append(k + " = '{}'".format(v))
-        
+
         for k, v in custom_op.items():
             for op, val in v.items():
                 tokens.append("%s %s '%s'" % (k, op, val))

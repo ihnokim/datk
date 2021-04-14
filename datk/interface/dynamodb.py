@@ -6,6 +6,7 @@ from datk.interface import Interface
 
 class DynamoDB(Interface):
     def __init__(self, config):
+        super().__init__(config)
         self.config = config
         self.client = None
         try:
@@ -17,11 +18,11 @@ class DynamoDB(Interface):
     @staticmethod
     def connect(config):
         return boto3.client(service_name=config['service_name'],
-                             region_name=config['region_name'],
-                             aws_access_key_id=config['aws_access_key_id'],
-                             aws_secret_access_key=config['aws_secret_access_key'],
-                             endpoint_url=config['endpoint_url'],
-                             config=Config(retries=dict(max_attempts=3)))
+                            region_name=config['region_name'],
+                            aws_access_key_id=config['aws_access_key_id'],
+                            aws_secret_access_key=config['aws_secret_access_key'],
+                            endpoint_url=config['endpoint_url'],
+                            config=Config(retries=dict(max_attempts=int(config['max_attempts']))))
     
     def list_tables(self, name):
         ret = list()
@@ -49,8 +50,10 @@ class DynamoDB(Interface):
         return self.client.describe_table(TableName=table)['Table']
     
     @staticmethod
-    def query_encoder(custom_op={}, **kwargs):
+    def query_encoder(custom_op=None, **kwargs):
         tokens = list()
+        if custom_op is None:
+            custom_op = dict()
         for k, v in kwargs.items():
             if type(v) is list:
                 tokens.append(k + " in ('{}')".format("', '".join([str(x) for x in v])))

@@ -1,8 +1,12 @@
 import pymysql
-from datk.interface import Interface, isnan
+from datk.interface import Interface
+from sshtunnel import SSHTunnelForwarder
+import numpy as np
+
 
 class MySQL(Interface):
     def __init__(self, config):
+        super().__init__(config)
         self.config = config
     
     def query(self, q):
@@ -10,30 +14,30 @@ class MySQL(Interface):
         conn = None
         ret = None
         if self.config['sshtunnel'] == 'true':
-            from sshtunnel import SSHTunnelForwarder
+
             ssh = SSHTunnelForwarder((self.config['ssh_ip'], self.config['ssh_port']),
-                                      ssh_password=self.config['ssh_pw'],
-                                      ssh_username=self.config['ssh_id'],
-                                      remote_bind_address=(self.config['ip'], int(self.config['port'])))
+                                     ssh_password=self.config['ssh_pw'],
+                                     ssh_username=self.config['ssh_id'],
+                                     remote_bind_address=(self.config['ip'], int(self.config['port'])))
             ssh.start()
-            conn = pymsql.connect(host='127.0.0.1', port=ssh.local_bind_port,
-                                  user=self.config['id'], passwd=self.config['pw'],
-                                  db=self.config['db'],
-                                  charset=self.config['charset'],
-                                  cursorclass=pymysql.cursors.DictCursor)
+            host = '127.0.0.1'
+            port = ssh.local_bind_port
         else:
-            conn = pymysql.connect(host=self.config['ip'], port=int(self.config['port']),
-                                   user=self.config['id'], passwd=self.config['pw'],
-                                   db=self.config['db'],
-                                   charset=self.config['charset'],
-                                   cursorclass=pymysql.cursors.DictCursor)
+            host = self.config['ip']
+            port = int(self.config['port'])
+
+        conn = pymysql.connect(host=host, port=port,
+                               user=self.config['id'], passwd=self.config['pw'],
+                               db=self.config['db'],
+                               charset=self.config['charset'],
+                               cursorclass=pymysql.cursors.DictCursor)
         try:
             cursor = conn.cursor()
             if type(q) == str:
                 cursor.execute(q)
             elif type(q) == list:
                 for qn in q:
-                    qursor.execute(qn)
+                    cursor.execute(qn)
             ret = cursor.fetchall()
             cursor.close()
             conn.commit()
@@ -96,14 +100,16 @@ class MySQL(Interface):
         pass
     
     @staticmethod
-    def query_encoder(custom_op={}, **kwargs):
+    def query_encoder(custom_op=None, **kwargs):
         tokens = list()
+        if custom_op is None:
+            custom_op = dict()
         for k, v in kwargs.items():
             if type(v) is list:
                 tokens.append(k + " in ('{}')".format("', '".join([str(x) for x in v])))
             else:
                 tokens.append(k + " = '{}'".format(v))
-        
+
         for k, v in custom_op.items():
             for op, val in v.items():
                 tokens.append("%s %s '%s'" % (k, op, val))
@@ -111,3 +117,13 @@ class MySQL(Interface):
     
     def __exit__(self, exc_type, exc_val, exc_tb):
         self.close()
+
+
+def isnan(value):
+    ret = False
+    try:
+        ret = np.isnan(value)
+    except Exception:
+        pass
+    finally:
+        return ret
